@@ -644,7 +644,7 @@ static void vi_reverseon(FAR struct vi_s *vi)
 }
 
 /****************************************************************************
- * Name:
+ * Name: vi_attriboff
  *
  * Description:
  *   Disable all previously selected attributes.
@@ -3599,7 +3599,7 @@ static void vi_showusage(FAR struct vi_s *vi, FAR const char *progname,
  *
  ****************************************************************************/
 
-#ifdef CONFIG_BUILD_KERNEL
+#ifdef CONFIG_BUILD_LOADABLE
 int main(int argc, FAR char *argv[])
 #else
 int vi_main(int argc, char **argv)

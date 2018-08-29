@@ -1,7 +1,9 @@
 ############################################################################
-# apps/examples/hello/Makefile
+# apps/examples/bmp180/Makefile
 #
-#   Copyright (C) 2008, 2010-2013 Gregory Nutt. All rights reserved.
+#   Copyright (C) 2018 Alan Carvalho de Assis. All rights reserved.
+#   Author: Alan Carvalho de Assis <acassis@gmail.com>
+#   Copyright (C) 2008, 2010-2013, 2017 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,16 +37,16 @@
 
 -include $(TOPDIR)/Make.defs
 
-# Hello, World! built-in application info
+# BMP180 Barometer sensor example built-in application info
 
 CONFIG_EXAMPLES_BMP180_PRIORITY ?= SCHED_PRIORITY_DEFAULT
 CONFIG_EXAMPLES_BMP180_STACKSIZE ?= 2048
 
 APPNAME = bmp180
-PRIORITY = $(CONFIG_EXAMPLES_HELLO_PRIORITY)
-STACKSIZE = $(CONFIG_EXAMPLES_HELLO_STACKSIZE)
+PRIORITY = $(CONFIG_EXAMPLES_BMP180_PRIORITY)
+STACKSIZE = $(CONFIG_EXAMPLES_BMP180_STACKSIZE)
 
-# Hello, World! Example
+# BMP180 Barometer sensor example
 
 ASRCS =
 CSRCS =

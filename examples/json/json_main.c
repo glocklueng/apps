@@ -228,15 +228,16 @@ static void create_objects(void)
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
+
 /****************************************************************************
- * Name:
+ * Name: json_main
  *
  * Description:
- *
+ *   main entry point
  *
  ****************************************************************************/
 
-#ifdef CONFIG_BUILD_KERNEL
+#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
 #else
 int json_main(int argc, const char *argv[])

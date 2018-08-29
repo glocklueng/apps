@@ -35,7 +35,7 @@ examples/adc
 
     CONFIG_ADC - Enabled ADC support
     CONFIG_NSH_BUILTIN_APPS - Build the ADC test as an NSH built-in function.
-      Default: Built as a standalone problem
+      Default: Built as a standalone program
 
   Specific configuration options for this example include:
 
@@ -79,7 +79,7 @@ examples/alarm
   Configuration:
 
     CONFIG_EXAMPLES_ALARM - Enable the RTC driver alarm test
-    CONFIG_EXAMPLES_ALARM_PROGNAME - If CONFIG_BUILD_KERNEL=y, then this is
+    CONFIG_EXAMPLES_ALARM_PROGNAME - If CONFIG_BUILD_LOADABLE=y, then this is
       the name of the program that will be use when the NSH ELF program is
       installed.
     CONFIG_EXAMPLES_ALARM_PRIORITY - Alarm daemon priority
@@ -169,7 +169,7 @@ examples/can
     CONFIG_CAN_LOOPBACK - A CAN driver may or may not support a loopback
       mode for testing. The STM32 CAN driver does support loopback mode.
     CONFIG_NSH_BUILTIN_APPS - Build the CAN test as an NSH built-in function.
-      Default: Built as a standalone problem
+      Default: Built as a standalone program
 
   Specific configuration options for this example include:
 
@@ -192,11 +192,6 @@ examples/canard
 ^^^^^^^^^^^^^^^
 
   Example application for canutils/libcarnard.
-
-examples/cc3000
-^^^^^^^^^^^^^^^
-
-  This is a test for the TI CC3000 wireless networking module.
 
 examples/cctype
 ^^^^^^^^^^^^^^^
@@ -343,6 +338,22 @@ examples/djoystick
     CONFIG_EXAMPLES_DJOYSTICK_SIGNO - Signal used to signal the test
       application.  Default 13.
 
+
+examples/dsptest
+^^^^^^^^^^^^^^^^^^
+
+  This is a Unit Test for the Nuttx DSP library. It use Unity testing framwork.
+
+  Dependencies:
+
+    CONFIG_LIBDSP=y
+    CONFIG_LIBDSP_DEBUG=y
+    CONFIG_TESTING_UNITY=y
+
+  Optional configuration:
+
+    CONFIG_TESTING_UNITY_OUTPUT_COLOR - enable colored output
+
 examples/elf
 ^^^^^^^^^^^^
 
@@ -424,7 +435,7 @@ examples/flash_test
     * CONFIG_MTD_SMART=y - SMART block driver support
     * CONFIG_NSH_BUILTIN_APPS=y - This example can only be built as an NSH
       command
-    * CONFIG_BUILD_PROTECTED=n and CONFIG_BUILD_KERNEL=n- This test uses
+    * CONFIG_BUILD_PROTECTED=n and CONFIG_BUILD_LOADABLE=n- This test uses
       internal OS interfaces and so is not available in the NUTTX kernel
       builds
 
@@ -432,6 +443,13 @@ examples/flowc
 ^^^^^^^^^^^^^^
 
   A simple test of serial hardware flow control.
+
+examples/ft80x
+^^^^^^^^^^^^^^
+
+  This examples has ports of several FTDI demos for the FTDI/BridgeTek FT80x
+  GUI chip.  As an example configuration, see
+  nuttx/configs/viewtool-stm32f107/ft80x/defconfig.
 
 examples/fstest
 ^^^^^^^^^^^^^^
@@ -668,7 +686,7 @@ examples/i2cchar
     CONFIG_DRIVERS_AUDIO - Enable audio device support
     CONFIG_AUDIO_I2SCHAR = Enabled support for the I2S character device
     CONFIG_NSH_BUILTIN_APPS - Build the I2S test as an NSH built-in function.
-      Default: Built as a standalone problem
+      Default: Built as a standalone program
 
   Specific configuration options for this example include:
 
@@ -729,6 +747,7 @@ examples/json
 
 examples/leds
 ^^^^^^^^^^^^
+
   This is a simple test of the board LED driver at nuttx/drivers/leds/userled_*.c.
 
 examples/lis2csh_reader
@@ -975,62 +994,6 @@ examples/nrf24l01_term
   Options:
 
     CONFIG_NSH_BUILTIN_APPS - Built as an NSH built-in applications.
-
-examples/nsh
-^^^^^^^^^^^^
-
-  Basic Configuration
-  -------------------
-  This directory provides an example of how to configure and use
-  the NuttShell (NSH) application.  NSH is a simple shell
-  application.  NSH is described in its own README located at
-  apps/nshlib/README.txt.  This function is enabled with:
-
-    CONFIG_EXAMPLES_NSH=y
-
-  Applications using this example will need to provide an defconfig
-  file in the configuration directory with instruction to build
-  the NSH library like:
-
-    CONFIG_NSH_LIBRARY=y
-
-  Other Configuration Requirements
-  --------------------------------
-  NOTE:  If the NSH serial console is used, then following is also
-  required to build the readline() library:
-
-    CONFIG_SYSTEM_READLINE=y
-
-  And if networking is included:
-
-    CONFIG_NETUTILS_NETLIB=y
-    CONFIG_NETUTILS_DHCPC=y
-    CONFIG_NETDB_DNSCLIENT=y
-    CONFIG_NETUTILS_TFTPC=y
-    CONFIG_NETUTILS_WEBCLIENT=y
-
-  If the Telnet console is enabled, then the defconfig file should
-  also include:
-
-    CONFIG_NETUTILS_TELNETD=y
-
-  Also if the Telnet console is enabled, make sure that you have the
-  following set in the NuttX configuration file or else the performance
-  will be very bad (because there will be only one character per TCP
-  transfer):
-
-    CONFIG_STDIO_BUFFER_SIZE - Some value >= 64
-    CONFIG_STDIO_LINEBUFFER=y
-
-  C++ Support
-  -----------
-  If CONFIG_HAVE_CXX=y and CONFIG_HAVE_CXXINITIALIZE=y, then this NSH
-  example can be configured to initialize C++ constructors when it
-  is started.  NSH does not use C++ and, by default, assumes that
-  constructors are initialized elsewhere.  However, you can force
-  NSH to initialize constructors by setting:
-
-    CONFIG_EXAMPLES_NSH_CXXINITIALIZE=y
 
 examples/nx
 ^^^^^^^^^^^
@@ -1446,14 +1409,16 @@ examples/posix_spawn
 
   Requires:
 
-    CONFIG_BINFMT_DISABLE=n           - Don't disable the binary loader
-    CONFIG_ELF=y                      - Enable ELF binary loader
-    CONFIG_LIBC_EXECFUNCS=y           - Enable support for posix_spawn
-    CONFIG_EXECFUNCS_SYMTAB="exports" - The name of the symbol table
-                                        created by the test.
-    CONFIG_EXECFUNCS_NSYMBOLS=10      - Value does not matter, it will be
-                                        corrected at runtime.
-    CONFIG_POSIX_SPAWN_STACKSIZE=768  - This default setting.
+    CONFIG_BINFMT_DISABLE=n                   - Don't disable the binary loader
+    CONFIG_ELF=y                              - Enable ELF binary loader
+    CONFIG_LIBC_EXECFUNCS=y                   - Enable support for posix_spawn
+    CONFIG_EXECFUNCS_SYMTAB_ARRAY="g_spawn_exports"
+                                              - The name of the symbol table
+                                                created by the test.
+    CONFIG_EXECFUNCS_NSYMBOLS_VAR="g_spawn_nexports"
+                                              - Name of variable holding the
+                                                number of symbols
+    CONFIG_POSIX_SPAWN_STACKSIZE=768          - This default setting.
 
   Test-specific configuration options:
 
@@ -1519,7 +1484,7 @@ examples/powerled
     1. Demo mode
 
     2. Continuous mode
-    
+
     3. Flash mode
 
 examples/pty_test
@@ -1619,7 +1584,7 @@ examples/relays
   relies on internal OS interfaces that are not normally available to a
   user-space program.  As a result, this example cannot be used if a
   NuttX is built as a protected, supervisor kernel (CONFIG_BUILD_PROTECTED
-  or CONFIG_BUILD_KERNEL).
+  or CONFIG_BUILD_LOADABLE).
 
 examples/rfid_readuid
 ^^^^^^^^^^^^^^^^^^^^^
@@ -1838,6 +1803,13 @@ examples/system
 
     ret = system("ls -Rl /");
 
+examples/tcpblaster
+^^^^^^^^^^^^^^^^^^
+
+  The tcpblaster example derives from the nettest example and basically duplicatesi
+  that example when the nettest PERFORMANCE option is selected.  tcpblaster has a
+  little better reporting of performance stats, however.
+
 examples/tcpecho
 ^^^^^^^^^^^^^^^^
 
@@ -1965,7 +1937,7 @@ examples/touchscreen
   simulated touchscreen driver.
 
     CONFIG_NSH_BUILTIN_APPS - Build the touchscreen test as
-      an NSH built-in function.  Default: Built as a standalone problem
+      an NSH built-in function.  Default: Built as a standalone program
     CONFIG_EXAMPLES_TOUCHSCREEN_MINOR - The minor device number.  Minor=N
       corresponds to touchscreen device /dev/inputN.  Note this value must
       with CONFIG_EXAMPLES_TOUCHSCREEN_DEVPATH.  Default 0.
@@ -1993,16 +1965,9 @@ examples/touchscreen
   This example code will call boardctl() to setup the touchscreen driver
   for texting.  The implementation of boardctl() will require that board-
   specific logic  provide the following interfaces that will be called by
-  the boardctl() in order to initialize and uninitialize the touchscreen hardware:
+  the boardctl() in order to initialize the touchscreen hardware:
 
     int board_tsc_setup(int minor);
-    void board_tsc_teardown(void);
-
-examples/uavcan
-^^^^^^^^^^^^^^^
-
-  Illustrates use of canutils/uavcan.  Contributed by Paul Alexander
-  Patience.
 
 examples/udp
 ^^^^^^^^^^^^

@@ -271,7 +271,7 @@ static void show_usage(const char *progname, int exitcode)
  * Public Functions
  ****************************************************************************/
 
-#ifdef CONFIG_BUILD_KERNEL
+#ifdef CONFIG_BUILD_LOADABLE
 int main(int argc, FAR char *argv[])
 #else
 int telnet_main(int argc, char *argv[])
@@ -327,7 +327,7 @@ int telnet_main(int argc, char *argv[])
     {
       portno = DEFAULT_PORT;
     }
-    
+
   /* Convert the <server-IP-addr> argument into a binary address */
 
   memset(&local, 0, sizeof(local));

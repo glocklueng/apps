@@ -1,7 +1,7 @@
 /****************************************************************************
  * apps/system/zmodem/zm.h
  *
- *   Copyright (C) 2013 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2013, 2018 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * References:
@@ -229,8 +229,8 @@
  */
 
 #ifdef CONFIG_DEBUG_ZMODEM
-#  define zmprintf(format, ...) fprintf(stderr, format, ##__VA_ARGS__)
-#  define zmdbg(format, ...)    fprintf(stderr, EXTRA_FMT format EXTRA_ARG, ##__VA_ARGS__)
+#  define zmprintf(format, ...) syslog(LOG_INFO, format, ##__VA_ARGS__)
+#  define zmdbg(format, ...)    syslog(LOG_INFO, EXTRA_FMT format EXTRA_ARG, ##__VA_ARGS__)
 #else
 #  undef CONFIG_SYSTEM_ZMODEM_DUMPBUFFER
 #  ifdef CONFIG_CPP_HAVE_VARARGS
@@ -379,6 +379,7 @@ struct zmr_state_s
 #endif
   uint8_t ntimeouts;         /* Number of timeouts */
   uint32_t crc;              /* Remove file CRC */
+  FAR const char *pathname;  /* Local pathname */
   FAR char *filename;        /* Local filename */
   FAR char *attn;            /* Attention string received from remote peer */
   off_t offset;              /* Current file offset */
@@ -576,6 +577,21 @@ int zm_writefile(int fd, FAR const uint8_t *buffer, size_t buflen, bool zcnl);
  ****************************************************************************/
 
 uint32_t zm_filecrc(FAR struct zm_state_s *pzm, FAR const char *filename);
+
+/****************************************************************************
+ * Name: zm_flowc
+ *
+ * Description:
+ *   Enable hardware Rx/Tx flow control.
+ *
+ *   REVISIT:  Consider returning the original termios settings so that they
+ *   could be restored with rx/sz exits.
+ *
+ ****************************************************************************/
+
+#ifdef CONFIG_SYSTEM_ZMODEM_FLOWC
+void zm_flowc(int fd);
+#endif
 
 /****************************************************************************
  * Name: zm_putzdle
@@ -789,7 +805,7 @@ int zm_timerrelease(FAR struct zm_state_s *pzm);
  ****************************************************************************/
 
 #ifdef CONFIG_SYSTEM_ZMODEM_DUMPBUFFER
-void zm_dumpbuffer(FAR const char *msg, FAR const void *buffer, size_t buflen);
+#  define zm_dumpbuffer(m,b,s) lib_dumpbuffer(m,b,s)
 #else
 #  define zm_dumpbuffer(m,b,s)
 #endif

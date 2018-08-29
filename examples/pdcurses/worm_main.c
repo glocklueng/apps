@@ -602,7 +602,7 @@ static void cleanup(void)
  * Public Functions
  ****************************************************************************/
 
-#ifdef CONFIG_BUILD_KERNEL
+#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
 #else
 int worm_main(int argc, char *argv[])
@@ -842,7 +842,7 @@ int worm_main(int argc, char *argv[])
 
 #endif /* KEY_RESIZE */
 
-          /* Make it simple to put this into single-step mode, or resume normal 
+          /* Make it simple to put this into single-step mode, or resume normal
            * operation - T. Dickey
            */
 

@@ -411,7 +411,7 @@ static int ufstest_fstat(FAR void *volinfo, FAR void *openinfo,
   buf->st_mode    = (S_IFREG | S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH);
   buf->st_size    = opriv->file->inuse;
   buf->st_blksize = UFSTEST_FS_BLOCKSIZE;
-  buf->st_blocks  = (opriv->file->inuse + UFSTEST_FS_BLOCKSIZE - 1) / 
+  buf->st_blocks  = (opriv->file->inuse + UFSTEST_FS_BLOCKSIZE - 1) /
                     UFSTEST_FS_BLOCKSIZE;
   buf->st_atime   = 0;
   buf->st_mtime   = 0;
@@ -490,7 +490,7 @@ static int ufstest_statfs(FAR void *volinfo, FAR struct statfs *buf)
 
   for (i = 0; i < UFSTEST_NFILES; i++)
     {
-      inuse += (g_rootdir[i].inuse + UFSTEST_FS_BLOCKSIZE - 1) / 
+      inuse += (g_rootdir[i].inuse + UFSTEST_FS_BLOCKSIZE - 1) /
                UFSTEST_FS_BLOCKSIZE;
     }
 
@@ -592,7 +592,7 @@ int ufstest_daemon(int argc, char *argv[])
  * userfs_main
  ****************************************************************************/
 
-#ifdef CONFIG_BUILD_KERNEL
+#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
 #else
 int userfs_main(int argc, char *argv[])

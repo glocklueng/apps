@@ -2,7 +2,7 @@
 # apps/Makefile
 #
 #   Copyright (C) 2011 Uros Platise. All rights reserved.
-#   Copyright (C) 2011-2014 Gregory Nutt. All rights reserved.
+#   Copyright (C) 2011-2014, 2018 Gregory Nutt. All rights reserved.
 #   Authors: Uros Platise <uros.platise@isotel.eu>
 #            Gregory Nutt <gnutt@nuttx.org>
 #
@@ -63,20 +63,26 @@ $(foreach BDIR, $(BUILDIRS), $(eval $(call Add_Application,$(BDIR))))
 
 # Library path
 
-LIBPATH ?= $(TOPDIR)$(DELIM)libs
+LIBPATH ?= $(TOPDIR)$(DELIM)staging
 
 # The install path
 
-BIN_DIR = $(APPDIR)$(DELIM)bin
+EXE_DIR = $(APPDIR)$(DELIM)exe
+BIN_DIR = $(EXE_DIR)$(DELIM)system$(DELIM)bin
 
 # The final build target
 
 BIN = libapps$(LIBEXT)
 
+# Symbol table for loadable apps.
+
+SYMTABSRC = $(EXE_DIR)$(DELIM)symtab_apps.c
+SYMTABOBJ = $(SYMTABSRC:.c=$(OBJEXT))
+
 # Build targets
 
 all: $(BIN)
-.PHONY: import install dirlinks context context_serialize context_rest .depdirs preconfig depend clean distclean
+.PHONY: import install dirlinks context context_serialize clean_context context_rest .depdirs preconfig depend clean distclean
 .PRECIOUS: libapps$(LIBEXT)
 
 define MAKE_template
@@ -97,12 +103,24 @@ $(foreach SDIR, $(CONFIGURED_APPS), $(eval $(call SDIR_template,$(SDIR),depend))
 $(foreach SDIR, $(CLEANDIRS), $(eval $(call SDIR_template,$(SDIR),clean)))
 $(foreach SDIR, $(CLEANDIRS), $(eval $(call SDIR_template,$(SDIR),distclean)))
 
+ifeq ($(CONFIG_BUILD_LOADABLE),)
 $(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
+else
+$(SYMTABSRC): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
+	$(Q) $(MAKE) install TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
+	$(Q) $(APPDIR)$(DELIM)tools$(DELIM)mksymtab.sh $(EXE_DIR)$(DELIM)system $(SYMTABSRC)
+
+$(SYMTABOBJ): %$(OBJEXT): %.c
+	$(call COMPILE, -fno-lto $<, $@)
+
+$(BIN): $(SYMTABOBJ)
+	$(call ARCHIVE, $(BIN), $^)
+endif
 
 .install: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_install)
 
 $(BIN_DIR):
-	mkdir -p $(BIN_DIR)
+	$(Q) mkdir -p $(BIN_DIR)
 
 install: $(BIN_DIR) .install
 
@@ -135,7 +153,11 @@ preconfig: Kconfig
 
 depend: .depend
 
+clean_context:
+	$(Q) $(MAKE) -C platform clean_context TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
+
 clean: $(foreach SDIR, $(CLEANDIRS), $(SDIR)_clean)
+	$(call DELFILE, $(SYMTABSRC))
 	$(call DELFILE, $(BIN))
 	$(call DELFILE, Kconfig)
 	$(call DELDIR, $(BIN_DIR))
@@ -157,6 +179,7 @@ else
 	)
 endif
 	$(call DELFILE, .depend)
+	$(call DELFILE, $(SYMTABSRC))
 	$(call DELFILE, $(BIN))
 	$(call DELFILE, Kconfig)
 	$(call DELDIR, $(BIN_DIR))

@@ -1,7 +1,7 @@
 /****************************************************************************
  * examples/posix_spawn/spawn_main.c
  *
- *   Copyright (C) 2013 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2013, 2018 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,7 @@
 #include <nuttx/compiler.h>
 
 #include <sys/mount.h>
+#include <sys/boardctl.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,7 +53,6 @@
 #include <errno.h>
 
 #include <nuttx/drivers/ramdisk.h>
-#include <nuttx/binfmt/elf.h>
 #include <nuttx/binfmt/symtab.h>
 
 #include "filesystem/romfs.h"
@@ -87,6 +87,14 @@
 
 #ifdef CONFIG_BINFMT_DISABLE
 #  error "You must not disable loadable modules via CONFIG_BINFMT_DISABLE in your configuration file"
+#endif
+
+#ifndef CONFIG_LIB_BOARDCTL
+#  error "This configuration requires CONFIG_LIB_BOARDCTL"
+#endif
+
+#ifndef CONFIG_BOARDCTL_APP_SYMTAB
+#  error "You must enable the symobol table interface with CONFIG_BOARDCTL_APP_SYMTAB"
 #endif
 
 /* Describe the ROMFS file system */
@@ -151,8 +159,8 @@ static char * const g_argv[4] =
  * Symbols from Auto-Generated Code
  ****************************************************************************/
 
-extern const struct symtab_s exports[];
-extern const int nexports;
+extern const struct symtab_s g_spawn_exports[];
+extern const int g_spawn_nexports;
 
 /****************************************************************************
  * Private Functions
@@ -222,12 +230,13 @@ static inline void testheader(FAR const char *progname)
  * Name: spawn_main
  ****************************************************************************/
 
-#ifdef CONFIG_BUILD_KERNEL
+#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
 #else
 int spawn_main(int argc, char *argv[])
 #endif
 {
+  struct boardioc_symtab_s symdesc;
   posix_spawn_file_actions_t file_actions;
   posix_spawnattr_t attr;
   FAR const char *filepath;
@@ -238,18 +247,6 @@ int spawn_main(int argc, char *argv[])
 
   mm_initmonitor();
 
-  /* Initialize the ELF binary loader */
-
-  message("Initializing the ELF binary loader\n");
-  ret = elf_initialize();
-  if (ret < 0)
-    {
-      errmsg("ERROR: Initialization of the ELF loader failed: %d\n", ret);
-      exit(1);
-    }
-
-  mm_update(&g_mmstep, "after elf_initialize");
-
   /* Create a ROM disk for the ROMFS filesystem */
 
   message("Registering romdisk at /dev/ram%d\n", CONFIG_EXAMPLES_ELF_DEVMINOR);
@@ -258,7 +255,6 @@ int spawn_main(int argc, char *argv[])
   if (ret < 0)
     {
       errmsg("ERROR: romdisk_register failed: %d\n", ret);
-      elf_uninitialize();
       exit(1);
     }
 
@@ -274,7 +270,6 @@ int spawn_main(int argc, char *argv[])
     {
       errmsg("ERROR: mount(%s,%s,romfs) failed: %s\n",
              CONFIG_EXAMPLES_ELF_DEVPATH, MOUNTPT, errno);
-      elf_uninitialize();
     }
 
   mm_update(&g_mmstep, "after mount");
@@ -288,15 +283,17 @@ int spawn_main(int argc, char *argv[])
   (void)setenv("PATH", MOUNTPT, 1);
 #endif
 
-  /* Make sure that we are using our symbol take */
+  /* Make sure that we are using our symbol tablee */
 
-  exec_setsymtab(exports, nexports);
+  symdesc.symtab   = (FAR struct symtab_s *)g_spawn_exports; /* Discard 'const' */
+  symdesc.nsymbols = g_spawn_nexports;
+  (void)boardctl(BOARDIOC_APP_SYMTAB, (uintptr_t)&symdesc);
 
   /*************************************************************************
    * Case 1: Simple program with arguments
    *************************************************************************/
 
-  /* Output a seperated so that we can clearly discriminate the output of
+  /* Output a separator so that we can clearly discriminate the output of
    * this program from the others.
    */
 
@@ -309,6 +306,7 @@ int spawn_main(int argc, char *argv[])
     {
       errmsg("ERROR: posix_spawn_file_actions_init failed: %d\n", ret);
     }
+
   posix_spawn_file_actions_dump(&file_actions);
 
   ret = posix_spawnattr_init(&attr);
@@ -316,6 +314,7 @@ int spawn_main(int argc, char *argv[])
     {
       errmsg("ERROR: posix_spawnattr_init failed: %d\n", ret);
     }
+
   posix_spawnattr_dump(&attr);
 
   mm_update(&g_mmstep, "after file_action/attr init");
@@ -346,13 +345,14 @@ int spawn_main(int argc, char *argv[])
   sleep(4);
   mm_update(&g_mmstep, "after posix_spawn");
 
-  /* Free attibutes and file actions */
+  /* Free attributes and file actions */
 
   ret = posix_spawn_file_actions_destroy(&file_actions);
   if (ret != 0)
     {
       errmsg("ERROR: posix_spawn_file_actions_destroy failed: %d\n", ret);
     }
+
   posix_spawn_file_actions_dump(&file_actions);
 
   ret = posix_spawnattr_destroy(&attr);
@@ -360,6 +360,7 @@ int spawn_main(int argc, char *argv[])
     {
       errmsg("ERROR: posix_spawnattr_destroy failed: %d\n", ret);
     }
+
   posix_spawnattr_dump(&attr);
 
   mm_update(&g_mmstep, "after file_action/attr destruction");
@@ -368,7 +369,7 @@ int spawn_main(int argc, char *argv[])
    * Case 2: Simple program with redirection of stdin to a file input
    *************************************************************************/
 
-  /* Output a seperated so that we can clearly discriminate the output of
+  /* Output a separator so that we can clearly discriminate the output of
    * this program from the others.
    */
 
@@ -381,6 +382,7 @@ int spawn_main(int argc, char *argv[])
     {
       errmsg("ERROR: posix_spawn_file_actions_init failed: %d\n", ret);
     }
+
   posix_spawn_file_actions_dump(&file_actions);
 
   ret = posix_spawnattr_init(&attr);
@@ -388,6 +390,7 @@ int spawn_main(int argc, char *argv[])
     {
       errmsg("ERROR: posix_spawnattr_init failed: %d\n", ret);
     }
+
   posix_spawnattr_dump(&attr);
 
   mm_update(&g_mmstep, "after file_action/attr init");
@@ -399,6 +402,7 @@ int spawn_main(int argc, char *argv[])
     {
       errmsg("ERROR: posix_spawn_file_actions_addclose failed: %d\n", ret);
     }
+
   posix_spawn_file_actions_dump(&file_actions);
 
   snprintf(fullpath, 128, "%s/%s", MOUNTPT, g_data);
@@ -407,6 +411,7 @@ int spawn_main(int argc, char *argv[])
     {
       errmsg("ERROR: posix_spawn_file_actions_addopen failed: %d\n", ret);
     }
+
   posix_spawn_file_actions_dump(&file_actions);
 
   mm_update(&g_mmstep, "after adding file_actions");
@@ -456,8 +461,6 @@ int spawn_main(int argc, char *argv[])
   mm_update(&g_mmstep, "after file_action/attr destruction");
 
   /* Clean-up */
-
-  elf_uninitialize();
 
   mm_update(&g_mmstep, "End-of-Test");
   return 0;

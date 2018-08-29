@@ -208,7 +208,7 @@ static void dump_statfs(FAR struct statfs *buf)
  * stat_main
  ****************************************************************************/
 
-#ifdef CONFIG_BUILD_KERNEL
+#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
 #else
 int stat_main(int argc, char *argv[])
@@ -307,7 +307,7 @@ int stat_main(int argc, char *argv[])
         {
           dump_stat(&statbuf);
         }
-  
+
       /* Try fstatfs */
 
       printf("\nTest fstatfs(%s)\n", path);

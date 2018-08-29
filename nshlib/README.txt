@@ -92,6 +92,14 @@ Command Overview
   FLASH footprint results but then also only simple environment
   variables like $FOO can be used on the command line.
 
+  CONFIG_NSH_QUOTE enables back-slash quoting of certain characters within
+  the command. This option is useful for the case where an NSH script is
+  used to dynamically generate a new NSH script. In that case, commands
+  must be treated as simple text strings without interpretation of any
+  special characters. Special characters such as $, `, ", and others must
+  be retained intact as part of the test string. This option is currently
+  only available is CONFIG_NSH_ARGCAT is also selected.
+
 Conditional Command Execution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -100,7 +108,7 @@ Conditional Command Execution
   command line but is primarily intended for use within NSH scripts
   (see the sh command).  The syntax is as follows:
 
-    if <cmd>
+    if [!] <cmd>
     then
       [sequence of <cmd>]
     else
@@ -745,13 +753,21 @@ o mkdir <path>
      drw-rw-rw-       0 TMP/
     nsh>
 
-o mkfatfs [-F <fatsize>] <block-driver>
+o mkfatfs [-F <fatsize>] [-r <rootdirentries>] <block-driver>
 
   Format a fat file system on the block device specified by <block-driver>
   path.  The FAT size may be provided as an option.  Without the <fatsize>
   option, mkfatfs will select either the FAT12 or FAT16 format.  For
   historical reasons, if you want the FAT32 format, it must be explicitly
   specified on the command line.
+
+  The -r option may be specified to select the the number of entries in
+  the root directory.  Typical values for small volumes would be 112 or 224;
+  512 should be used for large volumes, such as hard disks or very large
+  SD cards.  The default is 512 entries in all cases.
+
+  The reported number of root directory entries used with FAT32 is zero
+  because the FAT32 root directory is a cluster chain.
 
   NSH provides this command to access the mkfatfs() NuttX API.
   This block device must reside in the NuttX pseudo file system and
@@ -789,8 +805,8 @@ o mkrd [-m <minor>] [-s <sector-size>] <nsectors>
 
   Create a ramdisk consisting of <nsectors>, each of size
   <sector-size> (or 512 bytes if <sector-size> is not specified.
-  The ramdisk will be registered as /dev/ram<n> (if <n> is not
-  specified, mkrd will attempt to register the ramdisk as
+  The ramdisk will be registered as /dev/ram<minor>.  If <minor> is
+  not specified, mkrd will attempt to register the ramdisk as
   /dev/ram0.
 
   Example:
@@ -903,10 +919,12 @@ o passwd <username> <password>
 
   Set the password for the existing user <username> to <password>
 
-o poweroff
+o poweroff [<n>]
 
-  Shutdown and power off the system.  This command depends on hardware
-  support to power down or reset the system.
+  Shutdown and power off the system.  This command depends on board-
+  specific hardware support to power down the system.  The optional,
+  decimal numeric argument <n> may be included to provide power off
+  mode to board-specific power off logic.
 
   NOTE: Supporting both the poweroff and shutdown commands is redundant.
 
@@ -959,10 +977,12 @@ o readlink <link>
 
   Show target of a soft link.
 
-o reboot
+o reboot [<n>]
 
   Reset and reboot the system immediately.  This command depends on hardware
-  support to reset the system.
+  support to reset the system.  The optional, decimal numeric argument <n>
+  may be included to provide reboot mode to board-specific reboot
+  logic.
 
   NOTE: Supporting both the reboot and shutdown commands is redundant.
 
@@ -1482,40 +1502,47 @@ NSH-Specific Configuration Settings
       Default: n
 
   * CONFIG_NSH_CMDPARMS
-     If selected, then the output from commands, from file applications, and
-     from NSH built-in commands can be used as arguments to other
-     commands.  The entity to be executed is identified by enclosing the
-     command line in back quotes.  For example,
+      If selected, then the output from commands, from file applications, and
+      from NSH built-in commands can be used as arguments to other
+      commands.  The entity to be executed is identified by enclosing the
+      command line in back quotes.  For example,
 
-       set FOO `myprogram $BAR`
+        set FOO `myprogram $BAR`
 
-     Will execute the program named myprogram passing it the value of the
-     environment variable BAR.  The value of the environment variable FOO
-     is then set output of myprogram on stdout.  Because this feature commits
-     significant resources, it is disabled by default.
+      Will execute the program named myprogram passing it the value of the
+      environment variable BAR.  The value of the environment variable FOO
+      is then set output of myprogram on stdout.  Because this feature commits
+      significant resources, it is disabled by default.
 
-  * CONFIG_NSH_TMPDIR
-     If CONFIG_NSH_CMDPARMS is selected, then function output will be retained
-     in a temporary file.  In that case, this string must be provided to
-     specify the full path to a directory where temporary files can be
-     created.  This would be a good application of RAM disk: To provide
-     temporary storage for function output.
+      The CONFIG_NSH_CMDPARMS interim output will be retained in a temporary
+      file.  Full path to a directory where temporary files can be created is
+      taken from CONFIG_LIBC_TMPDIR and it defaults to /tmp if
+      CONFIG_LIBC_TMPDIR is not set.
 
   * CONFIG_NSH_MAXARGUMENTS
-     The maximum number of NSH command arguments. Default: 6
+      The maximum number of NSH command arguments. Default: 6
 
   * CONFIG_NSH_ARGCAT
-     Support concatenation of strings with environment variables or command
-     output.  For example:
+      Support concatenation of strings with environment variables or command
+      output.  For example:
 
-       set FOO XYZ
-       set BAR 123
-       set FOOBAR ABC_${FOO}_${BAR}
+        set FOO XYZ
+        set BAR 123
+        set FOOBAR ABC_${FOO}_${BAR}
 
-     would set the environment variable FOO to XYZ, BAR to 123 and FOOBAR
-     to ABC_XYZ_123.  If NSH_ARGCAT is not selected, then a slightly small
-     FLASH footprint results but then also only simple environment
-     variables like $FOO can be used on the command line.
+      would set the environment variable FOO to XYZ, BAR to 123 and FOOBAR
+      to ABC_XYZ_123.  If NSH_ARGCAT is not selected, then a slightly small
+      FLASH footprint results but then also only simple environment
+      variables like $FOO can be used on the command line.
+
+  * CONFIG_NSH_QUOTE
+      Enables back-slash quoting of certain characters within the command.
+      This option is useful for the case where an NSH script is used to
+      dynamically generate a new NSH script. In that case, commands must
+      be treated as simple text strings without interpretation of any
+      special characters. Special characters such as $, `, ", and others
+      must be retained intact as part of the test string. This option is
+      currently only available is CONFIG_NSH_ARGCAT is also selected.
 
   * CONFIG_NSH_NESTDEPTH
       The maximum number of nested if-then[-else]-fi sequences that

@@ -442,7 +442,7 @@ int powerled_main(int argc, char *argv[])
   bool terminate;
   bool config;
   int ret;
-  int fd;
+  int fd = -1;
 
   /* Initialize variables */
 
@@ -476,6 +476,18 @@ int powerled_main(int argc, char *argv[])
       printf("powerled_main: validate arguments failed!\n");
       goto errout;
     }
+#endif
+
+#ifndef CONFIG_NSH_BUILTIN_APPS
+  /* Perform architecture-specific initialization (if configured) */
+
+  (void)boardctl(BOARDIOC_INIT, 0);
+
+#ifdef CONFIG_BOARDCTL_FINALINIT
+  /* Perform architecture-specific final-initialization (if configured) */
+
+  (void)boardctl(BOARDIOC_FINALINIT, 0);
+#endif
 #endif
 
   /* Set LED current limit */

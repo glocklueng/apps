@@ -6,12 +6,22 @@
 config SYSTEM_SYSTEM
 	bool "System Command"
 	default n
-	depends on NSH_LIBRARY && SCHED_WAITPID
+	select SCHED_WAITPID
+	depends on NSH_LIBRARY
 	---help---
 		Enable support for the system() interface.  This will support
 		execution of NSH commands from C code.
 
 if SYSTEM_SYSTEM
+
+config SYSTEM_SYSTEM_SHPATH
+	string "Path to shell command"
+	default "/bin/nsh"
+	depends on BUILD_LOADABLE
+	---help---
+		This is the full path to the program in a mounted file system that
+		implements the system() command.  That is, a program that starts the
+		NSH shell, executes one command (in argv[1]), then exits.
 
 config SYSTEM_SYSTEM_STACKSIZE
 	int "system stack size"

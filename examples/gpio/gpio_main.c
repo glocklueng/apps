@@ -73,7 +73,7 @@ static void show_usage(FAR const char *progname)
  * gpio_main
  ****************************************************************************/
 
-#ifdef CONFIG_BUILD_KERNEL
+#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
 #else
 int gpio_main(int argc, char *argv[])
@@ -313,7 +313,7 @@ int gpio_main(int argc, char *argv[])
       default:
         fprintf(stderr, "ERROR: Unrecognized pintype: %d\n", (int)pintype);
         close(fd);
-        return EXIT_FAILURE;    
+        return EXIT_FAILURE;
     }
 
   close(fd);

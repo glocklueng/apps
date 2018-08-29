@@ -464,7 +464,7 @@
 
 /* This is the maximum number of arguments that will be accepted for a
  * command.  Here we attempt to select the smallest number possible depending
- * upon the of commands that are available.  Most commands use six or fewer
+ * upon the of commands that are available.  Most commands use seven or fewer
  * arguments, but there are a few that require more.
  *
  * This value is also configurable with CONFIG_NSH_MAXARGUMENTS.  This
@@ -472,24 +472,11 @@
  * commands that require more commands than NSH is aware of.
  */
 
-#ifndef CONFIG_NSH_MAXARGUMENTS
-#  define CONFIG_NSH_MAXARGUMENTS 6
-#endif
-
 #if CONFIG_NSH_MAXARGUMENTS < 11
 #  if defined(CONFIG_NET) && !defined(CONFIG_NSH_DISABLE_IFCONFIG)
 #    undef CONFIG_NSH_MAXARGUMENTS
 #    define CONFIG_NSH_MAXARGUMENTS 11
 #  endif
-#endif
-
-#if CONFIG_NSH_MAXARGUMENTS < 7
-#  if defined(CONFIG_NET_UDP) && CONFIG_NFILE_DESCRIPTORS > 0
-#    if !defined(CONFIG_NSH_DISABLE_GET) || !defined(CONFIG_NSH_DISABLE_PUT)
-#      undef CONFIG_NSH_MAXARGUMENTS
-#      define CONFIG_NSH_MAXARGUMENTS 7
-#    endif
-# endif
 #endif
 
 /* Argument list size
@@ -613,7 +600,7 @@
  *   library where they will become accessible to application code.
  */
 
-#if defined(CONFIG_BUILD_PROTECTED) || defined(CONFIG_BUILD_KERNEL)
+#if defined(CONFIG_BUILD_PROTECTED) || defined(CONFIG_BUILD_LOADABLE)
 #  undef  CONFIG_NSH_DISABLE_MKRD        /* 'mkrd' depends on ramdisk_register */
 #  define CONFIG_NSH_DISABLE_MKRD 1
 #endif
@@ -651,10 +638,10 @@
 #  define HAVE_DF_HUMANREADBLE 1
 #  define HAVE_DF_BLOCKOUTPUT  1
 #  if defined(CONFIG_FS_PROCFS_EXCLUDE_USAGE)
-#    undefine HAVE_DF_HUMANREADBLE
+#    undef HAVE_DF_HUMANREADBLE
 #  endif
 #  if defined(CONFIG_FS_PROCFS_EXCLUDE_BLOCKS)
-#    undefine HAVE_DF_BLOCKOUTPUT
+#    undef HAVE_DF_BLOCKOUTPUT
 #  endif
 #endif
 
@@ -754,7 +741,8 @@ struct nsh_itef_s
 {
   uint8_t   ie_ifcond   : 1;   /* Value of command in 'if' statement */
   uint8_t   ie_disabled : 1;   /* TRUE: Unconditionally disabled */
-  uint8_t   ie_unused   : 4;
+  uint8_t   ie_inverted : 1;   /* TRUE: inverted logic ('if ! <cmd>') */
+  uint8_t   ie_unused   : 3;
   uint8_t   ie_state    : 2;   /* If-then-else state (see enum nsh_itef_e) */
 };
 #endif

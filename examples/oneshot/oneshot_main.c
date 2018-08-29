@@ -106,7 +106,7 @@ static void show_usage(FAR const char *progname)
  * Name: oneshot_main
  ****************************************************************************/
 
-#ifdef CONFIG_BUILD_KERNEL
+#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
 #else
 int oneshot_main(int argc, char *argv[])
@@ -147,7 +147,7 @@ int oneshot_main(int argc, char *argv[])
           if (argc == 4)
             {
               /* FORM: nsh> oneshot [-d <usecs>] [<devname>] */
-          
+
               devname = argv[3];
             }
         }
@@ -210,7 +210,7 @@ int oneshot_main(int argc, char *argv[])
 
           start.ts.tv_sec  = secs;
           start.ts.tv_nsec = usecs * 1000;
-  
+
           /* Zero usecs to terminate the loop */
 
           usecs            = 0;

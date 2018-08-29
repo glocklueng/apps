@@ -1,8 +1,8 @@
 /****************************************************************************
- * examples/hello/hello_main.c
+ * examples/bmp180/bmp180_main.c
  *
- *   Copyright (C) 2008, 2011-2012 Gregory Nutt. All rights reserved.
- *   Author: Gregory Nutt <gnutt@nuttx.org>
+ *   Copyright (C) 2017 Sebastien Lorquet. All rights reserved.
+ *   Author: Sebastien Lorquet <sebastien@lorquet.fr>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -38,41 +38,42 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
-#include <fcntl.h>
-#include <nuttx/sensors/bmp180.h>
 #include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
 /****************************************************************************
- * hello_main
+ * bmp180_main
  ****************************************************************************/
 
-#ifdef CONFIG_BUILD_KERNEL
+#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
 #else
 int bmp180_main(int argc, char *argv[])
 #endif
 {
-  int fd_press; //BMP180 file descriptor
-  uint32_t sample_press;//Variable where we save the data of the sensor
+  int fd;
+  int ret;
+  uint32_t sample;
 
-  //Opening the sensor with read only permission
-  fd_press=open("/dev/press0", O_RDWR);
-  if(fd_press<0){
-    printf("Error opening BMP180 sensor %d\n",fd_press);
-  }
+  fd = open("/dev/press0", O_RDWR);
+  while (1)
+    {
+      ret = read(fd, &sample, sizeof(uint32_t));
+      if (ret != sizeof(sample))
+        {
+          break;
+        }
 
-  while(1){
-    //Read the data from the sensor and save in the structure
-    read(fd_press, &sample_press,sizeof(uint32_t));
-    //Show the data and wait 1 second
-    printf("Pressure: %d \n",sample_press);
-    sleep(1);
-  }
+      printf("Pressure value = %05d\n", sample);
 
+      usleep(500000);
+    }
 
+  close(fd);
   return 0;
 }

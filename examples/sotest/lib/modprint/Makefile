@@ -40,13 +40,16 @@ OBJEXT ?= .o
 DELIM ?= /
 
 ifeq ($(WINTOOL),y)
-NUTTXLIB = "${shell cygpath -w $(TOPDIR)$(DELIM)lib}"
+NUTTXLIB = "${shell cygpath -w $(TOPDIR)$(DELIM)staging}"
 else
-NUTTXLIB = "$(TOPDIR)$(DELIM)lib"
+NUTTXLIB = "$(TOPDIR)$(DELIM)staging"
 endif
 
 KDEFINE = ${shell $(TOPDIR)/tools/define.sh "$(CC)" __KERNEL__}
 CMODULEFLAGS += $(KDEFINE)
+
+LDLIBPATH =
+LDLIBS =
 
 ifeq ($(CONFIG_EXAMPLES_SOTEST_LIBGCC),y)
 LIBGCC = "${shell $(CC) $(ARCHCPUFLAGS) -print-libgcc-file-name 2>/dev/null}"

@@ -574,7 +574,7 @@ static void strng5(void)
   mvwaddstr(treescrn2, 12, 12, ",.:'");
 
   /* Save a fully lit tree */
- 
+
   overlay(treescrn2, treescrn);
 
   wrefresh(treescrn2);
@@ -783,7 +783,7 @@ static void reindeer(void)
  * Public Functions
  ****************************************************************************/
 
-#ifdef CONFIG_BUILD_KERNEL
+#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
 #else
 int xmas_main(int argc, char *argv[])
