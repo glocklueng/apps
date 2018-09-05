@@ -1,5 +1,5 @@
 ############################################################################
-# apps/system/install/Make.defs
+# apps/examples/dhtxx/Make.defs
 # Adds selected applications to apps/ build
 #
 #   Copyright (C) 2015 Gregory Nutt. All rights reserved.
@@ -34,7 +34,6 @@
 #
 ############################################################################
 
-ifeq ($(CONFIG_SYSTEM_INSTALL),y)
-CONFIGURED_APPS += system/install
+ifneq ($(CONFIG_EXAMPLES_DHTXX),)
+CONFIGURED_APPS += examples/dhtxx
 endif
-
